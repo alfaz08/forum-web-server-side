@@ -40,6 +40,10 @@ async function run() {
 
     
     //users related api
+    app.get('/users',async(req,res)=>{
+      const result =await userCollection.find().toArray()
+      res.send(result)
+    })
      //users related api
     app.post('/users',async(req,res)=>{
       const user = req.body
@@ -57,6 +61,20 @@ async function run() {
       res.send(result)
      })
 
+     //admin related api
+  //    app.get('/users/admin/:email',async(req,res)=>{
+  //     const email = req.params.email
+  //     if(email!==req.decoded.email){
+  //       return res.status(403).send({message: 'unauthorized access'})
+  //     }
+  //     const query = {email:email}
+  //     const user = await userCollection.findOne(query)
+  //     let admin=false
+  //     if(user){
+  //       admin=user?.role==='admin'
+  //     }
+  //     res.send({admin})
+  // })
 
 
     // Send a ping to confirm a successful connection
