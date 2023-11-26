@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors')
 const app =express();
+const jwt = require('jsonwebtoken')
 const port = process.env.PORT || 5000
 require('dotenv').config()
 
@@ -19,7 +20,7 @@ app.listen(port,()=>{
 console.log(process.env.DB_USER);
 console.log(process.env.DB_PASS);
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fpdogwm.mongodb.net/?retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -38,13 +39,23 @@ async function run() {
     //database collection
     const userCollection = client.db("opinionOverflowDB").collection("users")
 
-    
+
+
+    //jwt related api
+    app.post('/jwt',async(req,res)=>{
+      const user = req.body;
+      const token = jwt.sign(user,process.env.ACCESS_SECRET_TOKEN,{
+        expiresIn:'24h'
+      })
+      res.send({token})
+    })
+  
     //users related api
     app.get('/users',async(req,res)=>{
       const result =await userCollection.find().toArray()
       res.send(result)
     })
-     //users related api
+   
     app.post('/users',async(req,res)=>{
       const user = req.body
 
@@ -62,16 +73,16 @@ async function run() {
      })
      
      //admin made api
-    app.patch('users/admin/:id',async(req,res)=>{
-      const id = req.params.id;
-      const filter = {_id:new ObjectId(id)}
-      const updatedDoc={
-        $set:{
-          role:'admin'
-        }
-      }
-      const result = await userCollection.updateOne(filter,updatedDoc)
-      res.send(result)
+     app.patch('/users/admin/:id',async(req,res)=>{
+      const id = req.params.id
+      const filter= {_id: new ObjectId(id)}
+   const updatedDoc ={
+    $set:{
+      role: 'admin'
+    }
+   }
+   const result = await userCollection.updateOne(filter,updatedDoc)
+   res.send(result)
     })
 
 
