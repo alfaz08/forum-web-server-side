@@ -38,6 +38,7 @@ async function run() {
 
     //database collection
     const userCollection = client.db("opinionOverflowDB").collection("users")
+    const postCollection = client.db("opinionOverflowDB").collection("posts")
 
    
 
@@ -122,6 +123,31 @@ async function run() {
       }
       res.send({admin})
   })
+
+
+   //posts by users
+    app.post('/posts',async(req,res)=>{
+      const post =req.body
+      const result = await postCollection.insertOne(post)
+      res.send(result)
+    })
+
+    // app.get('/posts',async(req,res)=>{
+    //   const result =await postCollection.find().toArray()
+    //   res.send(result)
+    // })
+    app.get('/posts', async (req, res) => {
+      try {
+        const result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+        console.log(result); // Log the result to the console
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
+
+
 
 
     // Send a ping to confirm a successful connection
