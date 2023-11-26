@@ -39,7 +39,7 @@ async function run() {
     //database collection
     const userCollection = client.db("opinionOverflowDB").collection("users")
 
-
+   
 
     //jwt related api
     app.post('/jwt',async(req,res)=>{
@@ -50,8 +50,29 @@ async function run() {
       res.send({token})
     })
   
+
+    //middlwares
+    const verifyToken=(req,res,next)=>{
+      console.log('inside verify token',req.headers.authorization);
+      if(!req.headers.authorization){
+        return res.status(401).send({message: 'forbidden access'})
+      }
+      const token =req.headers.authorization.split(' ')[1]
+      jwt.verify(token,process.env.ACCESS_SECRET_TOKEN,(err,decoded)=>{
+        if(err){
+          return res.status(401).send({message: 'forbidden access'})
+        }
+        req.decoded =decoded;
+        next()
+      })
+    }
+  //verfyadmin
+ 
+
+
     //users related api
-    app.get('/users',async(req,res)=>{
+    app.get('/users',verifyToken,async(req,res)=>{
+      
       const result =await userCollection.find().toArray()
       res.send(result)
     })
@@ -88,19 +109,19 @@ async function run() {
 
 
      //admin related api
-  //    app.get('/users/admin/:email',async(req,res)=>{
-  //     const email = req.params.email
-  //     if(email!==req.decoded.email){
-  //       return res.status(403).send({message: 'unauthorized access'})
-  //     }
-  //     const query = {email:email}
-  //     const user = await userCollection.findOne(query)
-  //     let admin=false
-  //     if(user){
-  //       admin=user?.role==='admin'
-  //     }
-  //     res.send({admin})
-  // })
+     app.get('/users/admin/:email',verifyToken,async(req,res)=>{
+      const email = req.params.email
+      if(email!==req.decoded.email){
+        return res.status(403).send({message: 'unauthorized access'})
+      }
+      const query = {email:email}
+      const user = await userCollection.findOne(query)
+      let admin=false
+      if(user){
+        admin=user?.role==='admin'
+      }
+      res.send({admin})
+  })
 
 
     // Send a ping to confirm a successful connection
