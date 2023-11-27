@@ -156,6 +156,35 @@ async function run() {
     res.send(result)
   })
 
+  //comment count increase by patch
+    
+   //upadte data using patch
+   app.patch('/posts/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+     
+  
+      const updateDoc = {
+        $inc: {
+          commentCount: 1, // Increment the 'count' field by 1
+        },
+      };
+  
+      const result = await postCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    } catch (error) {
+      console.error('Error updating count:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  
+
+
+
+
+
 
 
     // Send a ping to confirm a successful connection
