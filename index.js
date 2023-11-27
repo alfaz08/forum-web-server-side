@@ -137,16 +137,54 @@ async function run() {
     //   const result =await postCollection.find().toArray()
     //   res.send(result)
     // })
-    app.get('/posts', async (req, res) => {
+    // app.get('/posts', async (req, res) => {
+    //   try {
+    //     const result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+    //     console.log(result); // Log the result to the console
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error(error);
+    //     res.status(500).send('Internal Server Error');
+    //   }
+    // });
+
+
+     //get result on popularity
+     app.get('/posts', async (req, res) => {
       try {
-        const result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+        let result;
+    
+        // Check if a query parameter named 'sortByPopularity' is present
+        const sortByPopularity = req.query.sortByPopularity === 'true';
+    
+        if (sortByPopularity) {
+          // If 'sortByPopularity' is true, sort by popularity
+          result = await postCollection
+            .aggregate([
+              {
+                $addFields: {
+                  voteDifference: { $subtract: ['$upVote', '$downVote'] },
+                },
+              },
+              {
+                $sort: { voteDifference: -1 },
+              },
+            ])
+            .toArray();
+        } else {
+          // Otherwise, fetch posts in descending order of creation date
+          result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+        }
+    
         console.log(result); // Log the result to the console
         res.send(result);
       } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ error: 'Internal Server Error' });
       }
     });
+
+
 
 
    //comment related API
@@ -158,13 +196,11 @@ async function run() {
 
   //comment count increase by patch
     
-   //upadte data using patch
+   //update data using patch
    app.patch('/posts/:id', async (req, res) => {
     try {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-     
-  
       const updateDoc = {
         $inc: {
           commentCount: 1, // Increment the 'count' field by 1
@@ -179,7 +215,44 @@ async function run() {
     }
   });
 
+  //update data using patch of upvote
+  app.patch('/posts/count/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $inc: {
+          upVote: 1, // Increment the 'count' field by 1
+          voteCount:1
+        },
+      };
   
+      const result = await postCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    } catch (error) {
+      console.error('Error updating count:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+  //update data using patch of downvote
+  app.patch('/posts/down/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $inc: {
+          downVote: 1, // Increment the 'count' field by 1
+          voteCount:1
+        },
+      };
+  
+      const result = await postCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    } catch (error) {
+      console.error('Error updating count:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
 
 
 
