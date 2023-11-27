@@ -39,6 +39,7 @@ async function run() {
     //database collection
     const userCollection = client.db("opinionOverflowDB").collection("users")
     const postCollection = client.db("opinionOverflowDB").collection("posts")
+    const commentCollection = client.db("opinionOverflowDB").collection("comments")
 
    
 
@@ -147,6 +148,13 @@ async function run() {
       }
     });
 
+
+   //comment related API
+   app.post('/comments',async(req,res)=>{
+    const comment =req.body
+    const result = await commentCollection.insertOne(comment)
+    res.send(result)
+  })
 
 
 
