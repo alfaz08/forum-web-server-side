@@ -163,7 +163,29 @@ async function run() {
 });
   
   
-  
+  //email specific all my post
+  app.get('/posts/my', async (req, res) => {
+    try {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await postCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+//delete specific data
+
+  app.delete('/posts/:id',async(req,res)=>{
+    const id = req.params.id
+    const query= {_id: new ObjectId(id)}
+    const result = await postCollection.deleteOne(query)
+    res.send(result)
+  })
+
 
 
    //posts by users
