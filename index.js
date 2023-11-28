@@ -69,12 +69,12 @@ async function run() {
       })
     }
   //verfyadmin
- 
+    
 
 
     //users related api
     app.get('/users',verifyToken,async(req,res)=>{
-      
+
       const result =await userCollection.find().toArray()
       res.send(result)
     })
@@ -124,6 +124,46 @@ async function run() {
       }
       res.send({admin})
   })
+
+
+
+   //email specific data
+
+   app.get('/users/single', async (req, res) => {
+    try {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await userCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  //email specific post
+  app.get('/posts/single', async (req, res) => {
+  try {
+    const email = req.query.email;
+    const query = { email: email };
+
+    // Sort by createdAt in descending order and limit to 3 results
+    const result = await postCollection.find(query)
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .toArray();
+
+    console.log(result);
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+  
+  
+  
 
 
    //posts by users
@@ -183,7 +223,6 @@ async function run() {
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
-
 
 
 
@@ -253,6 +292,9 @@ async function run() {
       res.status(500).send('Internal Server Error');
     }
   });
+
+
+ 
 
 
 
