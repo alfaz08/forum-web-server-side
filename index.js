@@ -40,7 +40,8 @@ async function run() {
     const userCollection = client.db("opinionOverflowDB").collection("users")
     const postCollection = client.db("opinionOverflowDB").collection("posts")
     const commentCollection = client.db("opinionOverflowDB").collection("comments")
-const reportCollection = client.db("opinionOverflowDB").collection("reports")    
+    const reportCollection = client.db("opinionOverflowDB").collection("reports")    
+    const paymentCollection = client.db("opinionOverflowDB").collection("payments")    
 
    
 
@@ -362,6 +363,39 @@ const reportCollection = client.db("opinionOverflowDB").collection("reports")
    })
 
    })
+
+   app.post('/payments',async(req,res)=>{
+    const payment =req.body
+    const result = await paymentCollection.insertOne(payment)
+    res.send(result)
+  })
+
+  
+  app.patch('/users/email/:email', async (req, res) => {
+    try {
+      const email = req.params.email;
+  
+      
+      const filter = { email: email };
+  
+     
+      const updateDoc = {
+        $set: {
+          badge: 'gold',
+        },
+      };
+  
+      
+      const result = await userCollection.updateOne(filter, updateDoc);
+  
+      res.send(result);
+    } catch (error) {
+      console.error('Error updating badge:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+
 
 
 
