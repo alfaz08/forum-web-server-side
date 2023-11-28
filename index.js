@@ -255,8 +255,26 @@ async function run() {
     res.send(result)
   })
 
-  //comment count increase by patch
-    
+  //comment load using specific postid
+
+  app.get('/comments/single', async (req, res) => {
+    try {
+      const postId = req.query.postId; // Corrected to match the client-side code
+      const query = { postId: postId };
+      const result = await commentCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+
+
+
+
+
    //update data using patch
    app.patch('/posts/:id', async (req, res) => {
     try {
