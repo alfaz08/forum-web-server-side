@@ -419,10 +419,19 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/announcements',verifyToken,async(req,res)=>{
+      const result =await announcementCollection.find().toArray()
+      res.send(result)
+    })
+
     //tag post api
     app.post('/tags',async(req,res)=>{
       const tag =req.body
       const result = await tagCollection.insertOne(tag)
+      res.send(result)
+    })
+    app.get('/tags',verifyToken,async(req,res)=>{
+      const result =await tagCollection.find().toArray()
       res.send(result)
     })
 
