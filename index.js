@@ -216,39 +216,111 @@ async function run() {
 
 
      //get result on popularity
-     app.get('/posts', async (req, res) => {
-      try {
-        let result;
+    //  app.get('/posts', async (req, res) => {
+    //   try {
+    //     let result;
     
-        // Check if a query parameter named 'sortByPopularity' is present
-        const sortByPopularity = req.query.sortByPopularity === 'true';
+    //     // Check if a query parameter named 'sortByPopularity' is present
+    //     const sortByPopularity = req.query.sortByPopularity === 'true';
     
-        if (sortByPopularity) {
-          // If 'sortByPopularity' is true, sort by popularity
-          result = await postCollection
-            .aggregate([
-              {
-                $addFields: {
-                  voteDifference: { $subtract: ['$upVote', '$downVote'] },
-                },
-              },
-              {
-                $sort: { voteDifference: -1 },
-              },
-            ])
-            .toArray();
-        } else {
-          // Otherwise, fetch posts in descending order of creation date
-          result = await postCollection.find().sort({ createdAt: -1 }).toArray();
-        }
+    //     if (sortByPopularity) {
+    //       // If 'sortByPopularity' is true, sort by popularity
+    //       result = await postCollection
+    //         .aggregate([
+    //           {
+    //             $addFields: {
+    //               voteDifference: { $subtract: ['$upVote', '$downVote'] },
+    //             },
+    //           },
+    //           {
+    //             $sort: { voteDifference: -1 },
+    //           },
+    //         ])
+    //         .toArray();
+    //     } else {
+    //       // Otherwise, fetch posts in descending order of creation date
+    //       result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+    //     }
     
-        console.log(result); // Log the result to the console
-        res.send(result);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-      }
-    });
+    //     console.log(result); // Log the result to the console
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error(error);
+    //     res.status(500).json({ error: 'Internal Server Error' });
+    //   }
+    // });
+
+
+   // Add pagination parameters to the /posts endpoint
+  //  app.get('/posts', async (req, res) => {
+  //   try {
+  //     let result;
+  
+  //     // Check if a query parameter named 'sortByPopularity' is present
+  //     const sortByPopularity = req.query.sortByPopularity === 'true';
+  
+  //     if (sortByPopularity) {
+  //       // If 'sortByPopularity' is true, sort by popularity
+  //       result = await postCollection
+  //         .aggregate([
+  //           {
+  //             $addFields: {
+  //               voteDifference: { $subtract: ['$upVote', '$downVote'] },
+  //             },
+  //           },
+  //           {
+  //             $sort: { voteDifference: -1 },
+  //           },
+  //         ])
+  //         .toArray();
+  //     } else {
+  //       // Otherwise, fetch posts in descending order of creation date
+  //       result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+  //     }
+  
+  //     console.log(result); // Log the result to the console
+  //     res.send(result);
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).json({ error: 'Internal Server Error' });
+  //   }
+  // });
+
+
+  app.get('/posts', async (req, res) => {
+    try {
+      let result;
+  
+      const page = parseInt(req.query.page) || 1;
+      const pageSize = 5; // Set the page size to 5
+  
+      const sortByPopularity = req.query.sortByPopularity === 'true';
+      const sortOptions = sortByPopularity
+        ? [{ $addFields: { voteDifference: { $subtract: ['$upVote', '$downVote'] } } }, { $sort: { voteDifference: -1 } }]
+        : [{ $sort: { createdAt: -1 } }];
+  
+      const skip = (page - 1) * pageSize;
+  
+      result = await postCollection.aggregate([...sortOptions, { $skip: skip }, { $limit: pageSize }]).toArray();
+  
+      console.log(result);
+      res.send(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
+ 
+
+
+   
+
+
+
+
+
+
 
 
 
@@ -345,6 +417,13 @@ async function run() {
     const result = await reportCollection.insertOne(report)
     res.send(result)
   })
+  app.get('/reports',verifyToken,async(req,res)=>{
+    const result =await reportCollection.find().toArray()
+    res.send(result)
+  })
+
+
+
  
 
 
@@ -433,6 +512,52 @@ async function run() {
     app.get('/tags',verifyToken,async(req,res)=>{
       const result =await tagCollection.find().toArray()
       res.send(result)
+    })
+
+    //id wise comment
+    app.get('/comments/post',verifyToken, async (req, res) => {
+      try {
+        const postId = req.query.postId; // Corrected to match the client-side code
+        const query = { postId: postId };
+        const result = await commentCollection.find(query).toArray();
+        console.log(result);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
+
+    //admin stats api
+    app.get('/admin-stats',verifyToken,async(req,res)=>{
+      const users =await userCollection.estimatedDocumentCount()
+      const posts=await postCollection.estimatedDocumentCount()
+      const comments =await commentCollection.estimatedDocumentCount()
+      const membership =await paymentCollection.estimatedDocumentCount()
+
+        // const payments = await paymentCollection.find().toArray()
+        // const revenue = payments.reduce((total,payment)=>total+payment.price,0)
+
+
+          const result =await paymentCollection.aggregate([
+            {
+              $group:{
+                _id:null,
+                totalRevenue:{
+                  $sum:'$price'
+                }
+              }
+            }
+          ]).toArray()
+          const revenue = result.length>0?result[0].totalRevenue:0
+
+      res.send({ 
+        users,
+        posts,
+        comments,
+        membership,
+        revenue
+      })
     })
 
 
