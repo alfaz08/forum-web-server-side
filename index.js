@@ -42,6 +42,8 @@ async function run() {
     const commentCollection = client.db("opinionOverflowDB").collection("comments")
     const reportCollection = client.db("opinionOverflowDB").collection("reports")    
     const paymentCollection = client.db("opinionOverflowDB").collection("payments")    
+    const announcementCollection = client.db("opinionOverflowDB").collection("announcements")    
+    const tagCollection = client.db("opinionOverflowDB").collection("tags")    
 
    
 
@@ -395,8 +397,34 @@ async function run() {
     }
   });
 
+   //email specific user info
+   app.get('/users/info', async (req, res) => {
+    try {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await userCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
 
 
+    //announcement post api
+    app.post('/announcements',async(req,res)=>{
+      const announcement =req.body
+      const result = await announcementCollection.insertOne(announcement)
+      res.send(result)
+    })
+
+    //tag post api
+    app.post('/tags',async(req,res)=>{
+      const tag =req.body
+      const result = await tagCollection.insertOne(tag)
+      res.send(result)
+    })
 
 
 
