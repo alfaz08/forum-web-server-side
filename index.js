@@ -34,7 +34,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     //database collection
     const userCollection = client.db("opinionOverflowDB").collection("users")
@@ -199,125 +199,52 @@ async function run() {
       res.send(result)
     })
 
-    // app.get('/posts',async(req,res)=>{
-    //   const result =await postCollection.find().toArray()
-    //   res.send(result)
-    // })
-    // app.get('/posts', async (req, res) => {
-    //   try {
-    //     const result = await postCollection.find().sort({ createdAt: -1 }).toArray();
-    //     console.log(result); // Log the result to the console
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error(error);
-    //     res.status(500).send('Internal Server Error');
-    //   }
-    // });
-
-
-     //get result on popularity
-    //  app.get('/posts', async (req, res) => {
-    //   try {
-    //     let result;
     
-    //     // Check if a query parameter named 'sortByPopularity' is present
-    //     const sortByPopularity = req.query.sortByPopularity === 'true';
+
+
     
-    //     if (sortByPopularity) {
-    //       // If 'sortByPopularity' is true, sort by popularity
-    //       result = await postCollection
-    //         .aggregate([
-    //           {
-    //             $addFields: {
-    //               voteDifference: { $subtract: ['$upVote', '$downVote'] },
-    //             },
-    //           },
-    //           {
-    //             $sort: { voteDifference: -1 },
-    //           },
-    //         ])
-    //         .toArray();
-    //     } else {
-    //       // Otherwise, fetch posts in descending order of creation date
-    //       result = await postCollection.find().sort({ createdAt: -1 }).toArray();
-    //     }
-    
-    //     console.log(result); // Log the result to the console
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error(error);
-    //     res.status(500).json({ error: 'Internal Server Error' });
-    //   }
-    // });
 
 
-   // Add pagination parameters to the /posts endpoint
-  //  app.get('/posts', async (req, res) => {
-  //   try {
-  //     let result;
-  
-  //     // Check if a query parameter named 'sortByPopularity' is present
-  //     const sortByPopularity = req.query.sortByPopularity === 'true';
-  
-  //     if (sortByPopularity) {
-  //       // If 'sortByPopularity' is true, sort by popularity
-  //       result = await postCollection
-  //         .aggregate([
-  //           {
-  //             $addFields: {
-  //               voteDifference: { $subtract: ['$upVote', '$downVote'] },
-  //             },
-  //           },
-  //           {
-  //             $sort: { voteDifference: -1 },
-  //           },
-  //         ])
-  //         .toArray();
-  //     } else {
-  //       // Otherwise, fetch posts in descending order of creation date
-  //       result = await postCollection.find().sort({ createdAt: -1 }).toArray();
-  //     }
-  
-  //     console.log(result); // Log the result to the console
-  //     res.send(result);
-  //   } catch (error) {
-  //     console.error(error);
-  //     res.status(500).json({ error: 'Internal Server Error' });
-  //   }
-  // });
-
-
-  app.get('/posts', async (req, res) => {
-    try {
-      let result;
-  
-      const page = parseInt(req.query.page) || 1;
-      const pageSize = 5; // Set the page size to 5
-  
-      const sortByPopularity = req.query.sortByPopularity === 'true';
-      const sortOptions = sortByPopularity
-        ? [{ $addFields: { voteDifference: { $subtract: ['$upVote', '$downVote'] } } }, { $sort: { voteDifference: -1 } }]
-        : [{ $sort: { createdAt: -1 } }];
-  
-      const skip = (page - 1) * pageSize;
-  
-      result = await postCollection.aggregate([...sortOptions, { $skip: skip }, { $limit: pageSize }]).toArray();
-  
-      console.log(result);
-      res.send(result);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
-  
  
 
+ 
 
+    
+  
+    app.get('/posts', async (req, res) => {
+      try {
+        let result;
+      
+        const sortByPopularity = req.query.sortByPopularity === 'true';
+      
+        if (sortByPopularity) {
+          result = await postCollection
+            .aggregate([
+              {
+                $addFields: {
+                  voteDifference: { $subtract: ['$upVote', '$downVote'] },
+                },
+              },
+              {
+                $sort: { voteDifference: -1 },
+              },
+            ])
+            .toArray();
+        } else {
+          result = await postCollection.find().sort({ createdAt: -1 }).toArray();
+        }
+      
+        console.log(result);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    });
+    
    
-
-
-
+    
+    
 
 
 
@@ -422,6 +349,13 @@ async function run() {
     res.send(result)
   })
 
+
+  app.delete('/reports/:id',async(req,res)=>{
+    const id = req.params.id
+    const query= {_id: new ObjectId(id)}
+    const result = await reportCollection.deleteOne(query)
+    res.send(result)
+  })
 
 
  
@@ -563,8 +497,8 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
