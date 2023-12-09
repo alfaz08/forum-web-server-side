@@ -10,7 +10,8 @@
 - Admin can take action again spam comment.
 - Admin can see total member,revenue,post,comment.
 - User Dashboard and Admin Dasboard.
-- Payment Method is integreted.
+- Payment method integration.
+- JSON Web Token authentication.
 
 ## Technology
 
