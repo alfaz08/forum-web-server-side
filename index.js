@@ -34,7 +34,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    await client.connect();
 
     //database collection
     const userCollection = client.db("opinionOverflowDB").collection("users")
@@ -262,16 +262,17 @@ async function run() {
 
   app.get('/comments/single', async (req, res) => {
     try {
-      const postId = req.query.postId; // Corrected to match the client-side code
-      const query = { postId: postId };
-      const result = await commentCollection.find(query).toArray();
-      console.log(result);
-      res.send(result);
+        const postId = req.query.postId;
+        const query = { postId: postId };
+        const sortBy = { createdAt: -1 }; // Sorting in descending order (recent first)
+        const result = await commentCollection.find(query).sort(sortBy).toArray();
+        console.log(result);
+        res.send(result);
     } catch (error) {
-      console.error(error);
-      res.status(500).send('Internal Server Error');
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
-  });
+});
 
 
 
@@ -497,8 +498,8 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
